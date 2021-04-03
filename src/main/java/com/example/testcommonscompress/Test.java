@@ -13,10 +13,8 @@ public class Test {
 
         List<File> files = Arrays.asList(f1, f2, f3, f4);
         File zipFile = new File("C:\\Users\\thedoflin\\Downloads\\testcommonscompress\\t.zip");
-        // 压缩文件
-        ZipUtil.compress(files, zipFile, true);
 
-        // 解压缩文件
-//        ZipUtil.decompress(zipFile, new File("/Users/zhangbaozhen/my/hahaha/"));
+//        ZipUtil.compress(files, zipFile, true);
+        System.out.println(ZipUtil.decompress(zipFile, zipFile.getParentFile()));
     }
 }

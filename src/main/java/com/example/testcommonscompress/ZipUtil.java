@@ -87,8 +87,10 @@ public class ZipUtil {
      * @return 是否成功
      */
     public static boolean decompress(File zipFile, File targetFolder) {
+        if (!targetFolder.exists()) {
+            targetFolder.mkdirs();
+        }
         InputStream inputStream = null;
-        OutputStream outputStream = null;
         //zip文件输入流
         ZipArchiveInputStream zipArchiveInputStream = null;
         ArchiveEntry archiveEntry;
@@ -99,32 +101,22 @@ public class ZipUtil {
             while (null != (archiveEntry = zipArchiveInputStream.getNextEntry())) {
                 //获取文件名
                 String archiveEntryFileName = archiveEntry.getName();
-                //构造解压后文件的存放路径
-                String archiveEntryPath = targetFolder.getPath() + archiveEntryFileName;
                 //把解压出来的文件写到指定路径
-                File entryFile = new File(archiveEntryPath);
-                if (!entryFile.exists()) {
-                    boolean mkdirs = entryFile.getParentFile().mkdirs();
-                    if (!mkdirs) {
-                        return false;
-                    }
-                }
+                File entryFile = new File(targetFolder, archiveEntryFileName);
                 byte[] buffer = new byte[1024 * 5];
-                outputStream = new FileOutputStream(entryFile);
+                OutputStream outputStream = new FileOutputStream(entryFile);
                 int len;
                 while ((len = zipArchiveInputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, len);
                 }
                 outputStream.flush();
+                outputStream.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         } finally {
             try {
-                if (null != outputStream) {
-                    outputStream.close();
-                }
                 if (null != zipArchiveInputStream) {
                     zipArchiveInputStream.close();
                 }
