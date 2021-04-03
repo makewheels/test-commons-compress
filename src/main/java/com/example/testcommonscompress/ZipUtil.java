@@ -24,46 +24,56 @@ public class ZipUtil {
      * @return 是否压缩成功
      */
     public static boolean compress(List<File> files, File zipFile, boolean deleteFilesAfterZip) {
-        InputStream inputStream = null;
-        ZipArchiveOutputStream zipArchiveOutputStream = null;
+        ZipArchiveOutputStream zipOutputStream = null;
         try {
-            zipArchiveOutputStream = new ZipArchiveOutputStream(zipFile);
-            //Use Zip64 extensions for all entries where they are required
-            zipArchiveOutputStream.setUseZip64(Zip64Mode.AsNeeded);
-            for (File file : files) {
+            zipOutputStream = new ZipArchiveOutputStream(zipFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (zipOutputStream == null) {
+            return false;
+        }
+        //Use Zip64 extensions for all entries where they are required
+        zipOutputStream.setUseZip64(Zip64Mode.AsNeeded);
+        for (File file : files) {
+            InputStream inputStream = null;
+            try {
                 //将每个文件用ZipArchiveEntry封装，使用ZipArchiveOutputStream写到压缩文件
                 ZipArchiveEntry zipArchiveEntry = new ZipArchiveEntry(file, file.getName());
-                zipArchiveOutputStream.putArchiveEntry(zipArchiveEntry);
+                zipOutputStream.putArchiveEntry(zipArchiveEntry);
                 inputStream = new FileInputStream(file);
                 byte[] buffer = new byte[1024 * 5];
                 int len;
                 while ((len = inputStream.read(buffer)) != -1) {
                     //把缓冲区的字节写入到ZipArchiveEntry
-                    zipArchiveOutputStream.write(buffer, 0, len);
-                }
-            }
-            zipArchiveOutputStream.closeArchiveEntry();
-            zipArchiveOutputStream.finish();
-            if (deleteFilesAfterZip) {
-                for (File file : files) {
-                    file.delete();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                //关闭输入流
-                if (null != inputStream) {
-                    inputStream.close();
-                }
-                //关闭输出流
-                if (null != zipArchiveOutputStream) {
-                    zipArchiveOutputStream.close();
+                    zipOutputStream.write(buffer, 0, len);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    //关闭输入流
+                    if (null != inputStream) {
+                        inputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        //关闭输出流
+        try {
+            zipOutputStream.closeArchiveEntry();
+            zipOutputStream.finish();
+            zipOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //删除源文件
+        if (deleteFilesAfterZip) {
+            for (File file : files) {
+                file.delete();
             }
         }
         return true;
